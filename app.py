@@ -18,10 +18,6 @@ st.write('Enter the values for the features to predict if a forest fire will occ
 # We'll create a dictionary to hold user inputs
 user_input = {}
 
-# Dynamically create input fields for each feature from loaded_feature_order
-# Exclude the target variable 'fire_occurrence' if it accidentally got into feature_order (it shouldn't if drop=True was used)
-# Also, X and Y are coordinates, no need to ask for one-hot encoded month/day directly
-
 # Mapping for months and days from original notebook to Streamlit selection
 month_map = {
     'jan': 'month_jan', 'feb': 'month_feb', 'mar': 'month_mar', 'apr': 'month_apr',
@@ -66,16 +62,8 @@ user_input['area'] = 0.0 # Area is excluded from prediction input
 # Convert user inputs to a DataFrame
 input_df = pd.DataFrame([user_input])
 
-# Reorder columns to match the feature order used during training
-# This is crucial for correct prediction.
-# Ensure all features in loaded_feature_order are present in input_df, filling missing with 0 if necessary
-# (This is especially important for one-hot encoded month/day columns not explicitly asked)
-final_input_df = pd.DataFrame(columns=loaded_feature_order)
-for col in loaded_feature_order:
-    if col in input_df.columns:
-        final_input_df[col] = input_df[col]
-    else:
-        final_input_df[col] = False # Default for one-hot encoded categories not selected
+# Reorder columns to match the feature order used during training using reindex for robustness
+final_input_df = input_df.reindex(columns=loaded_feature_order, fill_value=False)
 
 # Convert boolean columns to int for scaling if the scaler was fitted on int/float
 for col in final_input_df.select_dtypes(include='bool').columns:
